@@ -1,0 +1,28 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+model Category {
+    id       String     @id @db.Uuid @default(uuid())
+    name     String     @db.VarChar(64)
+    products Product[]
+    
+    @@map("categories")
+}
+
+model Product {
+    id          String    @id @db.Uuid @default(uuid())
+    name        String    @db.VarChar(64)
+    description String    @db.VarChar(256) @default("")
+    quantity    Int       @default(0)
+    price       Decimal   @db.Decimal(8, 2)
+    categoryId  String    @db.Uuid @map("category_id")
+    category    Category  @relation(fields: [categoryId], references: [id])
+    
+    @@map("products")
+}

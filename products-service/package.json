@@ -1,0 +1,25 @@
+{
+  "name": "products-service",
+  "version": "1.0.0",
+  "main": "index.js",
+  "keywords": [],
+  "author": "",
+  "type": "module",
+  "license": "ISC",
+  "description": "",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon --inspect src/index.js | pino-pretty -c -t"
+  },
+  "dependencies": {
+    "@prisma/client": "^3.8.1",
+    "dotenv": "^14.3.2",
+    "fastify": "^3.27.0",
+    "mercurius": "^9.1.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.15",
+    "pino-pretty": "^7.5.1",
+    "prisma": "^3.8.1"
+  }
+}

@@ -1,0 +1,84 @@
+version: '3.9'
+
+services:
+
+  gateway:
+    build: gateway
+    environment:
+      PRODUCTS_SERVICE_GRAPHQL_ENDPOINT: http://products:3000/graphql
+      REVIEWS_SERVICE_GRAPHQL_ENDPOINT: http://reviews:3000/graphql
+      POLLING_INTERVAL: 6000
+    ports:
+      - 3000:3000
+    depends_on:
+      reviews:
+        condition: service_healthy
+      products:
+        condition: service_healthy
+
+  products:
+    build: products-service
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@db:5432/products?sslMode=disable
+    healthcheck:
+      test: nc -z localhost 3000
+      interval: 5s
+      retries: 5
+      start_period: 5s
+    depends_on:
+      products-migrations:
+        condition: service_completed_successfully
+      db:
+        condition: service_healthy
+
+  reviews:
+    build: reviews-service
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@db:5432/reviews?sslMode=disable
+    healthcheck:
+      test: nc -z localhost 3000
+      interval: 5s
+      retries: 5
+      start_period: 5s
+    depends_on:
+      reviews-migrations:
+        condition: service_completed_successfully
+      db:
+        condition: service_healthy
+
+  products-migrations:
+    build: 
+      context: .
+      dockerfile: prisma.Dockerfile
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@db:5432/products?sslMode=disable
+    volumes:
+      - ./products-service/prisma:/usr/app/prisma:ro
+    depends_on:
+      db:
+        condition: service_healthy
+
+  reviews-migrations:
+    build: 
+      context: .
+      dockerfile: prisma.Dockerfile
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@db:5432/reviews?sslMode=disable
+    volumes:
+      - ./reviews-service/prisma:/usr/app/prisma:ro
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:13-alpine
+    volumes:
+      - ./docker-volumes/postgresql:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER:     postgres
+      POSTGRES_PASSWORD: postgres
+    healthcheck:
+      test: psql -Atx postgres://postgres:postgres@localhost:5432 -c 'SELECT 1'
+      interval: 15s
+      retries: 5
+      start_period: 15s
